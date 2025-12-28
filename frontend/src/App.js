@@ -222,7 +222,7 @@ function App() {
       <div style={styles.container}>
         <div style={styles.authBox}>
           <h1>🛡️ Security Audit Platform</h1>
-          <p>eWPTX-Level Vulnerability Scanner</p>
+          <p>Advanced Vulnerability Scanner</p>
 
           {error && <div style={styles.error}>{error}</div>}
 
