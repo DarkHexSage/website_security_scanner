@@ -570,6 +570,12 @@ Do NOT use for:
 For production assessments, use professional tools like Burp Suite, OWASP ZAP, or Nessus.
 
 
+## Screenshots
+<img width="1662" height="834" alt="image" src="https://github.com/user-attachments/assets/cd9eb434-9361-44f2-902e-21416f7e8ae1" />
+
+<img width="1664" height="817" alt="image" src="https://github.com/user-attachments/assets/5b69ab2a-a0f0-484c-aa7a-0ab9f49040ea" />
+
+
 ---
 
 ## ✨ **Highlights**
