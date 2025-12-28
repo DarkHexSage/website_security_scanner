@@ -8,6 +8,7 @@ function App() {
   const [password, setPassword] = useState('');
   const [url, setUrl] = useState('');
   const [scanId, setScanId] = useState(null);
+  const [scannedUrl, setScannedUrl] = useState(null);
   const [scanStatus, setScanStatus] = useState(null);
   const [findings, setFindings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,6 @@ function App() {
   };
 
   const validatePassword = (password) => {
-    // At least 8 characters
     return password.length >= 8;
   };
 
@@ -44,18 +44,48 @@ function App() {
     }
   };
 
+  // ===== GET COLOR BY SEVERITY =====
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'CRITICAL':
+        return '#dc3545'; // Red
+      case 'HIGH':
+        return '#fd7e14'; // Orange
+      case 'MEDIUM':
+        return '#ffc107'; // Yellow
+      case 'LOW':
+        return '#17a2b8'; // Blue
+      default:
+        return '#6c757d'; // Gray
+    }
+  };
+
+  const getSeverityBgColor = (severity) => {
+    switch (severity) {
+      case 'CRITICAL':
+        return '#ffe0e0'; // Light red
+      case 'HIGH':
+        return '#fff5e6'; // Light orange
+      case 'MEDIUM':
+        return '#fffacd'; // Light yellow
+      case 'LOW':
+        return '#e0f7ff'; // Light blue
+      default:
+        return '#f5f5f5'; // Light gray
+    }
+  };
+
   // ===== REGISTER =====
   const handleRegister = async (e) => {
     e.preventDefault();
     setError(null);
 
-    // Validate email
     if (!validateEmail(email)) {
       setError('Invalid email format. Example: user@example.com');
       return;
     }
 
-    // Validate password
     if (!validatePassword(password)) {
       setError('Password must be at least 8 characters long');
       return;
@@ -64,14 +94,10 @@ function App() {
     setLoading(true);
 
     try {
-      console.log('📝 Registering:', email);
-      
       const response = await axios.post(`${API_URL}/api/auth/register`, {
         email,
         password,
       });
-
-      console.log('✅ Registration successful');
 
       const newToken = response.data.access_token;
       localStorage.setItem('token', newToken);
@@ -81,7 +107,6 @@ function App() {
       setEmail('');
       setPassword('');
     } catch (err) {
-      console.error('❌ Registration error:', err.response?.data);
       setError(err.response?.data?.detail || 'Registration failed');
     }
 
@@ -93,13 +118,11 @@ function App() {
     e.preventDefault();
     setError(null);
 
-    // Validate email
     if (!validateEmail(email)) {
       setError('Invalid email format');
       return;
     }
 
-    // Validate password
     if (!validatePassword(password)) {
       setError('Invalid password');
       return;
@@ -108,14 +131,10 @@ function App() {
     setLoading(true);
 
     try {
-      console.log('🔐 Logging in:', email);
-      
       const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
       });
-
-      console.log('✅ Login successful');
 
       const newToken = response.data.access_token;
       localStorage.setItem('token', newToken);
@@ -125,7 +144,6 @@ function App() {
       setEmail('');
       setPassword('');
     } catch (err) {
-      console.error('❌ Login error:', err.response?.data);
       setError(err.response?.data?.detail || 'Login failed');
     }
 
@@ -138,6 +156,7 @@ function App() {
     localStorage.removeItem('user_email');
     setIsLoggedIn(false);
     setScanId(null);
+    setScannedUrl(null);
     setFindings([]);
   };
 
@@ -146,7 +165,6 @@ function App() {
     e.preventDefault();
     setError(null);
 
-    // Validate URL
     if (!validateUrl(url)) {
       setError('Invalid URL. Use: https://example.com or http://example.com');
       return;
@@ -161,8 +179,6 @@ function App() {
         throw new Error('No token found');
       }
 
-      console.log('🔍 Starting scan for:', url);
-
       const response = await axios.post(
         `${API_URL}/api/scans/create`,
         { url },
@@ -174,14 +190,12 @@ function App() {
         }
       );
 
-      console.log('✅ Scan created');
-
       setScanId(response.data.scan_id);
+      setScannedUrl(url); // Store the actual URL
       setScanStatus('running');
       setUrl('');
       pollScan(response.data.scan_id, currentToken);
     } catch (err) {
-      console.error('❌ Scan error:', err);
       setError(err.response?.data?.detail || err.message || 'Failed to start scan');
     }
 
@@ -206,11 +220,10 @@ function App() {
         setFindings(response.data.findings || []);
 
         if (response.data.status !== 'running') {
-          console.log('✅ Scan complete');
           clearInterval(interval);
         }
       } catch (err) {
-        console.error('❌ Poll error:', err);
+        console.error('Poll error:', err);
         clearInterval(interval);
       }
     }, 2000);
@@ -222,7 +235,7 @@ function App() {
       <div style={styles.container}>
         <div style={styles.authBox}>
           <h1>🛡️ Security Audit Platform</h1>
-          <p>Advanced Vulnerability Scanner</p>
+          <p>eWPTX-Level Vulnerability Scanner</p>
 
           {error && <div style={styles.error}>{error}</div>}
 
@@ -314,6 +327,15 @@ function App() {
                 {loading ? 'Starting...' : scanStatus === 'running' ? 'Scanning...' : 'Start Scan'}
               </button>
             </form>
+
+            <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+              <p><strong>Test URLs:</strong></p>
+              <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+                <li>http://testphp.vulnweb.com/</li>
+                <li>https://www.google.com</li>
+                <li>https://www.wikipedia.org</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -324,17 +346,26 @@ function App() {
               <h2>Welcome</h2>
               <p>Enter a website URL to scan for vulnerabilities</p>
               <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-                Test URLs:
+                The scanner will test for:
               </p>
               <ul style={{ fontSize: '14px', color: '#666', marginLeft: '20px' }}>
-                <li>http://testphp.vulnweb.com/ (Has vulnerabilities)</li>
-                <li>https://www.google.com (Secure site)</li>
-                <li>https://www.wikipedia.org (Secure site)</li>
+                <li>SQL Injection</li>
+                <li>XSS (Cross-Site Scripting)</li>
+                <li>Missing Security Headers</li>
+                <li>Server Information Disclosure</li>
+                <li>Broken Access Control</li>
+                <li>Directory Listing</li>
               </ul>
             </div>
           ) : (
             <div style={styles.card}>
-              <h2>Scan Results</h2>
+              {/* SHOW ACTUAL URL BEING SCANNED */}
+              <div style={styles.urlHeader}>
+                <h2>Scan Results</h2>
+                <p style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+                  <strong>URL:</strong> {scannedUrl}
+                </p>
+              </div>
 
               {scanStatus === 'running' ? (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -345,26 +376,26 @@ function App() {
                 <>
                   {/* Summary Cards - ALL SEVERITY LEVELS */}
                   <div style={styles.summary}>
-                    <div style={styles.summaryCard}>
-                      <div style={styles.summaryNumber}>
+                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('CRITICAL')}` }}>
+                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('CRITICAL') }}>
                         {findings.filter((f) => f.severity === 'CRITICAL').length}
                       </div>
                       <div>Critical</div>
                     </div>
-                    <div style={styles.summaryCard}>
-                      <div style={styles.summaryNumber}>
+                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('HIGH')}` }}>
+                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('HIGH') }}>
                         {findings.filter((f) => f.severity === 'HIGH').length}
                       </div>
                       <div>High</div>
                     </div>
-                    <div style={styles.summaryCard}>
-                      <div style={styles.summaryNumber}>
+                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('MEDIUM')}` }}>
+                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('MEDIUM') }}>
                         {findings.filter((f) => f.severity === 'MEDIUM').length}
                       </div>
                       <div>Medium</div>
                     </div>
-                    <div style={styles.summaryCard}>
-                      <div style={styles.summaryNumber}>
+                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('LOW')}` }}>
+                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('LOW') }}>
                         {findings.filter((f) => f.severity === 'LOW').length}
                       </div>
                       <div>Low</div>
@@ -376,23 +407,53 @@ function App() {
                   </div>
 
                   {findings.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: 'green', marginTop: '20px' }}>
+                    <p style={{ textAlign: 'center', color: '#27ae60', marginTop: '20px', fontSize: '16px', fontWeight: 'bold' }}>
                       ✅ No vulnerabilities found!
                     </p>
                   ) : (
                     <div style={styles.findingsList}>
                       {findings.map((finding, idx) => (
-                        <div key={idx} style={styles.findingCard}>
-                          <h3>{finding.type}</h3>
-                          <p>
-                            <strong>Severity:</strong> {finding.severity}
+                        <div 
+                          key={idx} 
+                          style={{
+                            ...styles.findingCard,
+                            backgroundColor: getSeverityBgColor(finding.severity),
+                            borderLeft: `5px solid ${getSeverityColor(finding.severity)}`
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ margin: '0 0 10px 0' }}>{finding.type}</h3>
+                            <span style={{
+                              background: getSeverityColor(finding.severity),
+                              color: 'white',
+                              padding: '4px 12px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              {finding.severity}
+                            </span>
+                          </div>
+                          
+                          {finding.endpoint && (
+                            <p style={{ margin: '5px 0' }}>
+                              <strong>Endpoint:</strong> <code style={{ fontSize: '12px', background: '#f5f5f5', padding: '2px 4px' }}>{finding.endpoint}</code>
+                            </p>
+                          )}
+                          
+                          <p style={{ margin: '5px 0' }}>
+                            <strong>CVSS Score:</strong> {finding.cvss_score}/10
                           </p>
-                          <p>
-                            <strong>CVSS:</strong> {finding.cvss_score}
-                          </p>
-                          <p>
+                          
+                          <p style={{ margin: '5px 0' }}>
                             <strong>Remediation:</strong> {finding.remediation}
                           </p>
+                          
+                          {finding.payload && (
+                            <p style={{ margin: '5px 0', fontSize: '12px', color: '#666' }}>
+                              <strong>Payload:</strong> <code>{finding.payload}</code>
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -456,6 +517,11 @@ const styles = {
     padding: '20px',
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  },
+  urlHeader: {
+    marginBottom: '20px',
+    paddingBottom: '15px',
+    borderBottom: '2px solid #eee',
   },
   form: {
     display: 'flex',
@@ -528,10 +594,8 @@ const styles = {
     gap: '15px',
   },
   findingCard: {
-    background: '#f8f9fa',
     padding: '15px',
     borderRadius: '4px',
-    borderLeft: '4px solid #e74c3c',
   },
 };
 
