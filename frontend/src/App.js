@@ -13,10 +13,10 @@ function App() {
   const [findings, setFindings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
 
   const API_URL = 'http://localhost:8000';
 
-  // Check if logged in on mount
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
@@ -25,7 +25,6 @@ function App() {
   }, []);
 
   // ===== VALIDATION FUNCTIONS =====
-
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -45,34 +44,33 @@ function App() {
   };
 
   // ===== GET COLOR BY SEVERITY =====
-
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'CRITICAL':
-        return '#dc3545'; // Red
+        return '#ff4757'; // Vibrant red
       case 'HIGH':
-        return '#fd7e14'; // Orange
+        return '#ff9f43'; // Vibrant orange
       case 'MEDIUM':
-        return '#ffc107'; // Yellow
+        return '#ffa502'; // Vibrant yellow-orange
       case 'LOW':
-        return '#17a2b8'; // Blue
+        return '#54a0ff'; // Vibrant blue
       default:
-        return '#6c757d'; // Gray
+        return '#a4b0bd'; // Gray
     }
   };
 
   const getSeverityBgColor = (severity) => {
     switch (severity) {
       case 'CRITICAL':
-        return '#ffe0e0'; // Light red
+        return 'rgba(255, 71, 87, 0.1)';
       case 'HIGH':
-        return '#fff5e6'; // Light orange
+        return 'rgba(255, 159, 67, 0.1)';
       case 'MEDIUM':
-        return '#fffacd'; // Light yellow
+        return 'rgba(255, 165, 2, 0.1)';
       case 'LOW':
-        return '#e0f7ff'; // Light blue
+        return 'rgba(84, 160, 255, 0.1)';
       default:
-        return '#f5f5f5'; // Light gray
+        return 'rgba(164, 176, 189, 0.1)';
     }
   };
 
@@ -191,7 +189,7 @@ function App() {
       );
 
       setScanId(response.data.scan_id);
-      setScannedUrl(url); // Store the actual URL
+      setScannedUrl(url);
       setScanStatus('running');
       setUrl('');
       pollScan(response.data.scan_id, currentToken);
@@ -232,54 +230,82 @@ function App() {
   // ===== LOGIN/REGISTER SCREEN =====
   if (!isLoggedIn) {
     return (
-      <div style={styles.container}>
+      <div style={styles.authContainer}>
+        <div style={styles.authOverlay} />
+        
         <div style={styles.authBox}>
-          <h1>🛡️ Security Audit Platform</h1>
-          <p>eWPTX-Level Vulnerability Scanner</p>
+          <div style={styles.authHeader}>
+            <h1 style={styles.authTitle}>Security Audit Platform</h1>
+            <p style={styles.authSubtitle}>Advanced Vulnerability Scanner</p>
+          </div>
 
-          {error && <div style={styles.error}>{error}</div>}
+          {error && <div style={styles.errorAlert}>{error}</div>}
 
-          <form onSubmit={handleLogin} style={styles.form}>
-            <h2>Login</h2>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password (8+ characters)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              required
-            />
-            <button type="submit" style={styles.button} disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+          <div style={styles.authTabs}>
+            <button
+              style={{
+                ...styles.tabButton,
+                ...(authMode === 'login' ? styles.tabButtonActive : styles.tabButtonInactive)
+              }}
+              onClick={() => setAuthMode('login')}
+            >
+              Login
+            </button>
+            <button
+              style={{
+                ...styles.tabButton,
+                ...(authMode === 'register' ? styles.tabButtonActive : styles.tabButtonInactive)
+              }}
+              onClick={() => setAuthMode('register')}
+            >
+              Register
+            </button>
+          </div>
+
+          <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={styles.form}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Email Address</label>
+              <input
+                type="email"
+                placeholder="user@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Password</label>
+              <input
+                type="password"
+                placeholder="Minimum 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <button type="submit" style={styles.submitButton} disabled={loading}>
+              {loading ? (
+                <>
+                  <span style={styles.spinner}></span>
+                  {authMode === 'login' ? 'Logging in...' : 'Registering...'}
+                </>
+              ) : (
+                authMode === 'login' ? 'Login' : 'Create Account'
+              )}
             </button>
           </form>
 
-          <hr style={{ margin: '20px 0' }} />
-
-          <p style={{ textAlign: 'center', marginBottom: '10px' }}>
-            Don't have an account?
-          </p>
-          <button
-            onClick={handleRegister}
-            style={styles.registerButton}
-            disabled={loading || !email || !password}
-          >
-            {loading ? 'Registering...' : 'Register New Account'}
-          </button>
-
-          <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
-            <p><strong>Requirements:</strong></p>
-            <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-              <li>Email: Valid format (user@example.com)</li>
-              <li>Password: At least 8 characters</li>
+          <div style={styles.authFooter}>
+            <p style={styles.footerText}>
+              <strong>Requirements:</strong>
+            </p>
+            <ul style={styles.requirementsList}>
+              <li>✓ Valid email address</li>
+              <li>✓ Password: 8+ characters</li>
             </ul>
           </div>
         </div>
@@ -289,12 +315,16 @@ function App() {
 
   // ===== DASHBOARD SCREEN =====
   return (
-    <div style={styles.dashboard}>
+    <div style={styles.dashboardContainer}>
+      <div style={styles.dashboardOverlay} />
+      
       {/* Header */}
       <div style={styles.header}>
-        <h1>🛡️ Security Audit Platform</h1>
-        <div>
-          <span>{localStorage.getItem('user_email')}</span>
+        <div style={styles.headerLeft}>
+          <h1 style={styles.headerTitle}>Security Audit Platform</h1>
+        </div>
+        <div style={styles.headerRight}>
+          <span style={styles.userEmail}>{localStorage.getItem('user_email')}</span>
           <button onClick={handleLogout} style={styles.logoutButton}>
             Logout
           </button>
@@ -306,35 +336,39 @@ function App() {
         {/* Left: Form */}
         <div style={styles.leftColumn}>
           <div style={styles.card}>
-            <h2>New Scan</h2>
+            <h2 style={styles.cardTitle}>Scan Website</h2>
+            <p style={styles.cardSubtitle}>Enter a URL to scan for vulnerabilities</p>
 
-            {error && <div style={styles.error}>{error}</div>}
+            {error && <div style={styles.errorAlert}>{error}</div>}
 
             <form onSubmit={handleScan} style={styles.form}>
-              <input
-                type="url"
-                placeholder="https://example.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                style={styles.input}
-                required
-              />
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Target URL</label>
+                <input
+                  type="url"
+                  placeholder="https://example.com"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  style={styles.input}
+                  required
+                />
+              </div>
               <button
                 type="submit"
-                style={styles.button}
+                style={styles.scanButton}
                 disabled={loading || scanStatus === 'running'}
               >
-                {loading ? 'Starting...' : scanStatus === 'running' ? 'Scanning...' : 'Start Scan'}
+                {loading ? 'Starting scan...' : scanStatus === 'running' ? 'Scanning...' : 'Start Security Scan'}
               </button>
             </form>
 
-            <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
-              <p><strong>Test URLs:</strong></p>
-              <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-                <li>http://testphp.vulnweb.com/</li>
-                <li>https://www.google.com</li>
-                <li>https://www.wikipedia.org</li>
-              </ul>
+            <div style={styles.testUrls}>
+              <p style={styles.testUrlsTitle}>Test URLs</p>
+              <div style={styles.testUrlsList}>
+                <code style={styles.testUrl}>http://testphp.vulnweb.com/</code>
+                <code style={styles.testUrl}>https://www.google.com</code>
+                <code style={styles.testUrl}>https://www.wikipedia.org</code>
+              </div>
             </div>
           </div>
         </div>
@@ -343,73 +377,88 @@ function App() {
         <div style={styles.rightColumn}>
           {!scanId ? (
             <div style={styles.card}>
-              <h2>Welcome</h2>
-              <p>Enter a website URL to scan for vulnerabilities</p>
-              <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-                The scanner will test for:
-              </p>
-              <ul style={{ fontSize: '14px', color: '#666', marginLeft: '20px' }}>
-                <li>SQL Injection</li>
-                <li>XSS (Cross-Site Scripting)</li>
-                <li>Missing Security Headers</li>
-                <li>Server Information Disclosure</li>
-                <li>Broken Access Control</li>
-                <li>Directory Listing</li>
-              </ul>
+              <div style={styles.welcomeBox}>
+                <h2 style={styles.cardTitle}>Welcome</h2>
+                <p style={styles.cardSubtitle}>Secure your web applications with comprehensive vulnerability scanning</p>
+                
+                <div style={styles.featuresGrid}>
+                  <div style={styles.feature}>
+                    <div style={styles.featureName}>SQL Injection</div>
+                  </div>
+                  <div style={styles.feature}>
+                    <div style={styles.featureName}>XSS Attacks</div>
+                  </div>
+                  <div style={styles.feature}>
+                    <div style={styles.featureName}>Security Headers</div>
+                  </div>
+                  <div style={styles.feature}>
+                    <div style={styles.featureName}>Directory Listing</div>
+                  </div>
+                  <div style={styles.feature}>
+                    <div style={styles.featureName}>Server Info Disclosure</div>
+                  </div>
+                  <div style={styles.feature}>
+                    <div style={styles.featureName}>Access Control</div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div style={styles.card}>
-              {/* SHOW ACTUAL URL BEING SCANNED */}
-              <div style={styles.urlHeader}>
-                <h2>Scan Results</h2>
-                <p style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
-                  <strong>URL:</strong> {scannedUrl}
-                </p>
+              <div style={styles.resultsHeader}>
+                <h2 style={styles.cardTitle}>Security Scan Results</h2>
+                <p style={styles.urlDisplay}>{scannedUrl}</p>
               </div>
 
               {scanStatus === 'running' ? (
-                <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <p style={{ fontSize: '24px' }}>⏳ Scanning...</p>
-                  <p>Please wait while we assess the security of your website</p>
+                <div style={styles.scanningState}>
+                  <div style={styles.scanningAnimation}>
+                    <div style={styles.scanningDot}></div>
+                  </div>
+                  <p style={styles.scanningText}>Analyzing website security...</p>
+                  <p style={styles.scanningSubtext}>This may take a moment</p>
                 </div>
               ) : (
                 <>
-                  {/* Summary Cards - ALL SEVERITY LEVELS */}
-                  <div style={styles.summary}>
-                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('CRITICAL')}` }}>
-                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('CRITICAL') }}>
+                  {/* Summary Cards */}
+                  <div style={styles.summaryGrid}>
+                    <div style={{...styles.summaryCard, borderTopColor: getSeverityColor('CRITICAL')}}>
+                      <div style={{...styles.summaryCount, color: getSeverityColor('CRITICAL')}}>
                         {findings.filter((f) => f.severity === 'CRITICAL').length}
                       </div>
-                      <div>Critical</div>
+                      <div style={styles.summaryLabel}>Critical</div>
                     </div>
-                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('HIGH')}` }}>
-                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('HIGH') }}>
+                    <div style={{...styles.summaryCard, borderTopColor: getSeverityColor('HIGH')}}>
+                      <div style={{...styles.summaryCount, color: getSeverityColor('HIGH')}}>
                         {findings.filter((f) => f.severity === 'HIGH').length}
                       </div>
-                      <div>High</div>
+                      <div style={styles.summaryLabel}>High</div>
                     </div>
-                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('MEDIUM')}` }}>
-                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('MEDIUM') }}>
+                    <div style={{...styles.summaryCard, borderTopColor: getSeverityColor('MEDIUM')}}>
+                      <div style={{...styles.summaryCount, color: getSeverityColor('MEDIUM')}}>
                         {findings.filter((f) => f.severity === 'MEDIUM').length}
                       </div>
-                      <div>Medium</div>
+                      <div style={styles.summaryLabel}>Medium</div>
                     </div>
-                    <div style={{ ...styles.summaryCard, borderTop: `4px solid ${getSeverityColor('LOW')}` }}>
-                      <div style={{ ...styles.summaryNumber, color: getSeverityColor('LOW') }}>
+                    <div style={{...styles.summaryCard, borderTopColor: getSeverityColor('LOW')}}>
+                      <div style={{...styles.summaryCount, color: getSeverityColor('LOW')}}>
                         {findings.filter((f) => f.severity === 'LOW').length}
                       </div>
-                      <div>Low</div>
+                      <div style={styles.summaryLabel}>Low</div>
                     </div>
-                    <div style={styles.summaryCard}>
-                      <div style={styles.summaryNumber}>{findings.length}</div>
-                      <div>Total</div>
+                    <div style={{...styles.summaryCard, borderTopColor: '#3b82f6'}}>
+                      <div style={{...styles.summaryCount, color: '#3b82f6'}}>
+                        {findings.length}
+                      </div>
+                      <div style={styles.summaryLabel}>Total</div>
                     </div>
                   </div>
 
                   {findings.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#27ae60', marginTop: '20px', fontSize: '16px', fontWeight: 'bold' }}>
-                      ✅ No vulnerabilities found!
-                    </p>
+                    <div style={styles.noFindingsBox}>
+                      <p style={styles.noFindingsText}>No vulnerabilities detected!</p>
+                      <p style={styles.noFindingsSubtext}>This website appears to be secure</p>
+                    </div>
                   ) : (
                     <div style={styles.findingsList}>
                       {findings.map((finding, idx) => (
@@ -418,40 +467,45 @@ function App() {
                           style={{
                             ...styles.findingCard,
                             backgroundColor: getSeverityBgColor(finding.severity),
-                            borderLeft: `5px solid ${getSeverityColor(finding.severity)}`
+                            borderLeftColor: getSeverityColor(finding.severity)
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ margin: '0 0 10px 0' }}>{finding.type}</h3>
+                          <div style={styles.findingHeader}>
+                            <h3 style={styles.findingType}>{finding.type}</h3>
                             <span style={{
                               background: getSeverityColor(finding.severity),
                               color: 'white',
-                              padding: '4px 12px',
-                              borderRadius: '4px',
+                              padding: '6px 14px',
+                              borderRadius: '20px',
                               fontSize: '12px',
-                              fontWeight: 'bold'
+                              fontWeight: 'bold',
+                              whiteSpace: 'nowrap'
                             }}>
                               {finding.severity}
                             </span>
                           </div>
                           
                           {finding.endpoint && (
-                            <p style={{ margin: '5px 0' }}>
-                              <strong>Endpoint:</strong> <code style={{ fontSize: '12px', background: '#f5f5f5', padding: '2px 4px' }}>{finding.endpoint}</code>
+                            <p style={styles.findingDetail}>
+                              <strong>Endpoint:</strong> 
+                              <code style={styles.endpoint}>{finding.endpoint}</code>
                             </p>
                           )}
                           
-                          <p style={{ margin: '5px 0' }}>
-                            <strong>CVSS Score:</strong> {finding.cvss_score}/10
-                          </p>
+                          <div style={styles.cvssContainer}>
+                            <strong>CVSS Score:</strong>
+                            <div style={{...styles.cvssBar, width: `${(finding.cvss_score / 10) * 100}%`, backgroundColor: getSeverityColor(finding.severity)}}>
+                              {finding.cvss_score}/10
+                            </div>
+                          </div>
                           
-                          <p style={{ margin: '5px 0' }}>
+                          <p style={styles.findingDetail}>
                             <strong>Remediation:</strong> {finding.remediation}
                           </p>
                           
                           {finding.payload && (
-                            <p style={{ margin: '5px 0', fontSize: '12px', color: '#666' }}>
-                              <strong>Payload:</strong> <code>{finding.payload}</code>
+                            <p style={styles.payloadDetail}>
+                              <strong>Payload:</strong> <code style={styles.payloadCode}>{finding.payload}</code>
                             </p>
                           )}
                         </div>
@@ -469,134 +523,636 @@ function App() {
 }
 
 const styles = {
-  container: {
+  // AUTH CONTAINER
+  authContainer: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundImage: 'url("https://wallpapers.com/images/hd/honeycomb-cyber-security-de1nra84qghymwjm.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontFamily: 'Arial, sans-serif',
+    fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+    position: 'relative',
   },
+
+  authOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.65)',
+    zIndex: 1,
+  },
+
   authBox: {
-    background: 'white',
-    padding: '40px',
-    borderRadius: '8px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+    background: 'rgba(20, 30, 60, 0.3)',
+    padding: '50px 40px',
+    borderRadius: '20px',
+    boxShadow: '0 8px 32px 0 rgba(59, 130, 246, 0.2)',
     width: '100%',
-    maxWidth: '400px',
+    maxWidth: '420px',
+    zIndex: 2,
+    backdropFilter: 'blur(25px)',
+    WebkitBackdropFilter: 'blur(25px)',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
   },
-  dashboard: {
-    minHeight: '100vh',
-    background: '#f5f5f5',
-    fontFamily: 'Arial, sans-serif',
+
+  authHeader: {
+    textAlign: 'center',
+    marginBottom: '40px',
   },
-  header: {
-    background: '#2c3e50',
+
+  authTitle: {
+    margin: '0 0 10px 0',
+    fontSize: '36px',
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: '-0.5px',
+    textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+  },
+
+  authSubtitle: {
+    margin: 0,
+    fontSize: '15px',
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '500',
+  },
+
+  authTabs: {
+    display: 'flex',
+    gap: '10px',
+    marginBottom: '30px',
+  },
+
+  tabButton: {
+    flex: 1,
+    padding: '12px',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '15px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  },
+
+  tabButtonActive: {
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
-    padding: '20px',
+    border: '1px solid rgba(59, 130, 246, 0.5)',
+  },
+
+  tabButtonInactive: {
+    background: 'rgba(59, 130, 246, 0.15)',
+    color: 'rgba(255, 255, 255, 0.8)',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+  },
+
+  authFooter: {
+    marginTop: '30px',
+    paddingTop: '20px',
+    borderTop: '1px solid rgba(59, 130, 246, 0.3)',
+    fontSize: '14px',
+    color: 'rgba(255, 255, 255, 0.85)',
+  },
+
+  footerText: {
+    margin: '0 0 10px 0',
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+
+  requirementsList: {
+    margin: '8px 0 0 0',
+    paddingLeft: '20px',
+    listStyle: 'none',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+
+  // DASHBOARD
+  dashboardContainer: {
+    minHeight: '100vh',
+    backgroundImage: 'url("https://www.pixelstalk.net/wp-content/uploads/2016/05/Futuristic-Computer-Wallpapers.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
+    fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+    position: 'relative',
+  },
+
+  dashboardOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.65)',
+    zIndex: 0,
+  },
+
+  // HEADER
+  header: {
+    background: 'rgba(26, 58, 82, 0.35)',
+    color: 'white',
+    padding: '20px 30px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    position: 'relative',
+    zIndex: 10,
+    backdropFilter: 'blur(25px)',
+    WebkitBackdropFilter: 'blur(25px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
   },
+
+  headerLeft: {
+    flex: 1,
+  },
+
+  headerTitle: {
+    margin: 0,
+    fontSize: '32px',
+    fontWeight: '700',
+    letterSpacing: '-0.5px',
+  },
+
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+  },
+
+  userEmail: {
+    fontSize: '15px',
+    fontWeight: '500',
+    opacity: 0.9,
+  },
+
+  // MAIN CONTENT
   mainContent: {
     display: 'grid',
-    gridTemplateColumns: '1fr 2fr',
-    gap: '20px',
-    padding: '20px',
-    maxWidth: '1200px',
+    gridTemplateColumns: '35% 1fr',
+    gap: '25px',
+    padding: '30px',
+    maxWidth: '1400px',
     margin: '0 auto',
+    position: 'relative',
+    zIndex: 5,
   },
+
   leftColumn: {
-    minHeight: '100vh',
+    minHeight: 'calc(100vh - 200px)',
   },
+
   rightColumn: {
-    minHeight: '100vh',
+    minHeight: 'calc(100vh - 200px)',
   },
+
+  // CARDS
   card: {
-    background: 'white',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    background: 'rgba(20, 30, 60, 0.25)',
+    padding: '30px',
+    borderRadius: '16px',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
   },
-  urlHeader: {
-    marginBottom: '20px',
-    paddingBottom: '15px',
-    borderBottom: '2px solid #eee',
+
+  cardTitle: {
+    margin: '0 0 8px 0',
+    fontSize: '26px',
+    fontWeight: '700',
+    color: '#ffffff',
+    textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
   },
+
+  cardSubtitle: {
+    margin: '0 0 25px 0',
+    fontSize: '14px',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+
+  // FORMS
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '20px',
   },
+
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+
+  label: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+  },
+
   input: {
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    fontSize: '14px',
+    padding: '13px 16px',
+    border: '2px solid rgba(59, 130, 246, 0.4)',
+    borderRadius: '10px',
+    fontSize: '15px',
+    transition: 'all 0.3s ease',
+    fontFamily: 'inherit',
+    outline: 'none',
+    background: 'rgba(20, 30, 60, 0.35)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    color: '#ffffff',
   },
-  button: {
-    padding: '10px',
-    background: '#667eea',
+
+  inputFocus: {
+    borderColor: '#3b82f6',
+    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+  },
+
+  // BUTTONS
+  submitButton: {
+    padding: '12px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
-    border: 'none',
-    borderRadius: '4px',
+    border: '1px solid rgba(59, 130, 246, 0.5)',
+    borderRadius: '10px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold',
+    fontSize: '15px',
+    fontWeight: '700',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    marginTop: '10px',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    boxShadow: '0 8px 32px 0 rgba(59, 130, 246, 0.4)',
   },
-  registerButton: {
+
+  scanButton: {
+    padding: '13px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+    color: 'white',
+    border: '1px solid rgba(59, 130, 246, 0.5)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: '700',
+    transition: 'all 0.3s ease',
     width: '100%',
-    padding: '10px',
-    background: '#27ae60',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    boxShadow: '0 8px 32px 0 rgba(59, 130, 246, 0.4)',
+  },
+
+  logoutButton: {
+    padding: '10px 20px',
+    background: 'rgba(255, 255, 255, 0.15)',
     color: 'white',
-    border: 'none',
-    borderRadius: '4px',
+    border: '1px solid rgba(255, 255, 255, 0.4)',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)',
   },
-  logoutButton: {
-    padding: '8px 16px',
-    background: '#e74c3c',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    marginLeft: '10px',
-  },
-  error: {
-    background: '#ffe6e6',
-    color: '#c0392b',
-    padding: '10px',
-    borderRadius: '4px',
-    marginBottom: '10px',
-  },
-  summary: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr',
-    gap: '10px',
+
+  // ERRORS
+  errorAlert: {
+    background: 'rgba(255, 71, 87, 0.2)',
+    color: '#ff6b7a',
+    padding: '12px 15px',
+    borderRadius: '8px',
     marginBottom: '20px',
+    fontSize: '14px',
+    fontWeight: '500',
+    borderLeft: '4px solid #ff6b7a',
   },
-  summaryCard: {
-    background: '#f8f9fa',
+
+  // TEST URLS
+  testUrls: {
+    marginTop: '30px',
     padding: '20px',
-    borderRadius: '4px',
+    background: 'rgba(59, 130, 246, 0.15)',
+    borderRadius: '10px',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+    backdropFilter: 'blur(15px)',
+    WebkitBackdropFilter: 'blur(15px)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+  },
+
+  testUrlsTitle: {
+    margin: '0 0 12px 0',
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+
+  testUrlsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+
+  testUrl: {
+    padding: '9px 12px',
+    background: 'rgba(20, 30, 60, 0.3)',
+    borderRadius: '6px',
+    fontSize: '13px',
+    color: '#a8c5f7',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+    fontFamily: 'Courier New, monospace',
+    wordBreak: 'break-all',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+  },
+
+  // WELCOME BOX
+  welcomeBox: {
     textAlign: 'center',
   },
-  summaryNumber: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: '#667eea',
+
+  featuresGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '15px',
+    marginTop: '25px',
   },
+
+  feature: {
+    padding: '15px',
+    background: 'rgba(59, 130, 246, 0.15)',
+    borderRadius: '10px',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(15px)',
+    WebkitBackdropFilter: 'blur(15px)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+  },
+
+  featureName: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+
+  // RESULTS HEADER
+  resultsHeader: {
+    marginBottom: '25px',
+    paddingBottom: '20px',
+    borderBottom: '2px solid rgba(59, 130, 246, 0.3)',
+  },
+
+  urlDisplay: {
+    fontSize: '13px',
+    color: '#a8c5f7',
+    margin: '10px 0 0 0',
+    fontFamily: 'Courier New, monospace',
+    wordBreak: 'break-all',
+    fontWeight: '500',
+  },
+
+  // SCANNING STATE
+  scanningState: {
+    textAlign: 'center',
+    padding: '60px 20px',
+  },
+
+  scanningAnimation: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginBottom: '20px',
+  },
+
+  scanningDot: {
+    width: '12px',
+    height: '12px',
+    background: '#a8c5f7',
+    borderRadius: '50%',
+    animation: 'pulse 1.5s infinite',
+  },
+
+  scanningText: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#ffffff',
+    margin: '0 0 8px 0',
+  },
+
+  scanningSubtext: {
+    fontSize: '14px',
+    color: 'rgba(255, 255, 255, 0.8)',
+    margin: 0,
+  },
+
+  // SUMMARY GRID
+  summaryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(5, 1fr)',
+    gap: '12px',
+    marginBottom: '25px',
+  },
+
+  summaryCard: {
+    background: 'rgba(59, 130, 246, 0.15)',
+    padding: '20px',
+    borderRadius: '10px',
+    textAlign: 'center',
+    borderTop: '4px solid',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(15px)',
+    WebkitBackdropFilter: 'blur(15px)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+  },
+
+  summaryCount: {
+    fontSize: '36px',
+    fontWeight: '800',
+    marginBottom: '8px',
+    color: '#a8c5f7',
+  },
+
+  summaryLabel: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.85)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+
+  // NO FINDINGS
+  noFindingsBox: {
+    textAlign: 'center',
+    padding: '50px 20px',
+    background: 'rgba(59, 130, 246, 0.15)',
+    borderRadius: '12px',
+    border: '2px solid rgba(59, 130, 246, 0.3)',
+    backdropFilter: 'blur(15px)',
+    WebkitBackdropFilter: 'blur(15px)',
+    boxShadow: '0 8px 32px 0 rgba(59, 130, 246, 0.2)',
+  },
+
+  noFindingsText: {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#a8c5f7',
+    margin: '0 0 8px 0',
+  },
+
+  noFindingsSubtext: {
+    fontSize: '14px',
+    color: 'rgba(255, 255, 255, 0.8)',
+    margin: 0,
+  },
+
+  // FINDINGS LIST
   findingsList: {
     display: 'flex',
     flexDirection: 'column',
     gap: '15px',
   },
+
   findingCard: {
-    padding: '15px',
+    padding: '18px',
+    borderRadius: '10px',
+    borderLeft: '5px solid',
+    border: '1px solid rgba(59, 130, 246, 0.2)',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(15px)',
+    WebkitBackdropFilter: 'blur(15px)',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+  },
+
+  findingHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '15px',
+    gap: '15px',
+  },
+
+  findingType: {
+    margin: 0,
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#ffffff',
+    flex: 1,
+  },
+
+  findingDetail: {
+    margin: '8px 0',
+    fontSize: '14px',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+
+  endpoint: {
+    fontSize: '13px',
+    background: 'rgba(59, 130, 246, 0.2)',
+    padding: '3px 8px',
     borderRadius: '4px',
+    color: '#a8c5f7',
+    fontFamily: 'Courier New, monospace',
+    marginLeft: '8px',
+  },
+
+  cvssContainer: {
+    margin: '12px 0',
+    fontSize: '14px',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+
+  cvssBar: {
+    height: '24px',
+    marginTop: '6px',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontSize: '12px',
+    fontWeight: '700',
+    transition: 'width 0.3s ease',
+  },
+
+  payloadDetail: {
+    margin: '12px 0 0 0',
+    fontSize: '13px',
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontStyle: 'italic',
+  },
+
+  payloadCode: {
+    fontSize: '12px',
+    background: 'rgba(20, 30, 60, 0.3)',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontFamily: 'Courier New, monospace',
+    marginLeft: '6px',
+    wordBreak: 'break-all',
+    color: '#a8c5f7',
+    border: '1px solid rgba(59, 130, 246, 0.2)',
+  },
+
+  spinner: {
+    display: 'inline-block',
+    width: '4px',
+    height: '4px',
+    borderRadius: '50%',
+    background: 'white',
+    animation: 'spin 0.6s infinite',
   },
 };
+
+// Add animations
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+  }
+
+  button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    div[style*="gridTemplateColumns"] {
+      grid-template-columns: 1fr !important;
+    }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default App;

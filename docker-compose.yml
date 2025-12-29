@@ -27,7 +27,7 @@ services:
     container_name: security_backend
     environment:
       DATABASE_URL: postgresql://postgres:password@db:5432/security_scanner
-      SECRET_KEY: sk_dev_7f8e9d0c1b2a3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7
+      SECRET_KEY: 9a7f3e5b2d1c8f4a6e9d2c5a1f8b3e7d0a4c6f2e5b8d1a3c7f4e6b9d2a5c8f
       DEBUG: "True"
     ports:
       - "8000:8000"
@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     container_name: security_frontend
     environment:
-      REACT_APP_API_URL: http://backend:8000
+      REACT_APP_API_URL: http://security_backend:8000
     ports:
       - "3000:3000"
     depends_on:
