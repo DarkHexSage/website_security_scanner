@@ -571,9 +571,11 @@ For production assessments, use professional tools like Burp Suite, OWASP ZAP, o
 
 
 ## Screenshots
-<img width="1662" height="834" alt="image" src="https://github.com/user-attachments/assets/cd9eb434-9361-44f2-902e-21416f7e8ae1" />
+<img width="1741" height="822" alt="image" src="https://github.com/user-attachments/assets/a76b9936-23f5-4e12-8938-eb4248cdb7e3" />
 
-<img width="1664" height="817" alt="image" src="https://github.com/user-attachments/assets/5b69ab2a-a0f0-484c-aa7a-0ab9f49040ea" />
+
+<img width="1086" height="772" alt="image" src="https://github.com/user-attachments/assets/f00d2008-8e2d-428d-bce4-bbfd69dabe8f" />
+
 
 
 ---
