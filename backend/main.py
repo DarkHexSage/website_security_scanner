@@ -22,7 +22,7 @@ app = FastAPI(lifespan=lifespan)
 # ✅ CORS middleware - MUST BE FIRST
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:32776", "http://localhost:32775", "*"],
+    allow_origins=["http://adragportfolio.info.gf:32776", "http://adragportfolio.info.gf:32775", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
