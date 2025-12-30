@@ -30,7 +30,7 @@ services:
       SECRET_KEY: 9a7f3e5b2d1c8f4a6e9d2c5a1f8b3e7d0a4c6f2e5b8d1a3c7f4e6b9d2a5c8f
       DEBUG: "True"
     ports:
-      - "8000:8000"
+      - "32775:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +46,7 @@ services:
     environment:
       REACT_APP_API_URL: http://security_backend:8000
     ports:
-      - "3000:3000"
+      - "32776:3000"
     depends_on:
       - backend
     networks:
