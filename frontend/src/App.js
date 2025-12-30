@@ -15,7 +15,7 @@ function App() {
   const [error, setError] = useState(null);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
 
-  const API_URL = 'http://localhost:8000';
+  const API_URL = 'http://adragportfolio.info.gf:32785';
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
