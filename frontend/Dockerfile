@@ -1,10 +1,12 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
+
 ARG PUBLIC_URL=/
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build -- --public-url=$PUBLIC_URL
+RUN PUBLIC_URL=$PUBLIC_URL npm run build
+
 FROM node:18-alpine
 WORKDIR /app
 RUN npm install -g serve
