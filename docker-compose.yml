@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   db:
     image: postgres:15
@@ -43,10 +42,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - PUBLIC_URL=/security-scanner        
+        - PUBLIC_URL=/security-scanner
     container_name: security_frontend
-  environment:
-    - REACT_APP_API_URL=/security-scanner/api
+    environment:
+      - REACT_APP_API_URL=/security-scanner/api
     ports:
       - "32776:3000"
     depends_on:
