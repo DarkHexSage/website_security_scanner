@@ -14,8 +14,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
-
-  const API_URL = 'http://adragportfolio.info.gf:32775';
+  const API_BASE = process.env.REACT_APP_API_URL || '/security-scanner/api';
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
