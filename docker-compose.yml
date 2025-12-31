@@ -42,9 +42,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - PUBLIC_URL=/security-scanner        
     container_name: security_frontend
-    environment:
-      REACT_APP_API_URL: http://security_backend:8000
+  environment:
+    - REACT_APP_API_URL=/security-scanner/api
     ports:
       - "32776:3000"
     depends_on:
