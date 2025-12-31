@@ -1,6 +1,6 @@
-ARG PUBLIC_URL=/
 FROM node:18-alpine AS builder
 WORKDIR /app
+ARG PUBLIC_URL=/
 COPY package*.json ./
 RUN npm install
 COPY . .
