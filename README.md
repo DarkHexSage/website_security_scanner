@@ -576,7 +576,9 @@ For production assessments, use professional tools like Burp Suite, OWASP ZAP, o
 
 <img width="1086" height="772" alt="image" src="https://github.com/user-attachments/assets/f00d2008-8e2d-428d-bce4-bbfd69dabe8f" />
 
+## Demo 
 
+[securit-scanner.webm](https://github.com/user-attachments/assets/b6fe5c65-901a-4c7e-ab56-8d2d7c43f484)
 
 ---
 
